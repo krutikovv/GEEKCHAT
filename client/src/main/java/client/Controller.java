@@ -1,6 +1,7 @@
 package client;
 
 import commands.Command;
+import db.DB;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -25,6 +26,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URL;
+import java.sql.SQLException;
 import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
@@ -42,6 +44,8 @@ public class Controller implements Initializable {
     private TextArea textArea;
     @FXML
     private TextField textField;
+    @FXML
+    private HBox topPanel;
 
     private Socket socket;
     private DataInputStream in;
@@ -50,11 +54,14 @@ public class Controller implements Initializable {
     private final int PORT = 8189;
 
     private boolean authenticated;
+    private String login;
     private String nickname;
 
     private Stage stage;
     private Stage regStage;
+    private Stage settingsStage;
     private RegController regController;
+    private SettingsController settingsController;
 
     public void setAuthenticated(boolean authenticated) {
         this.authenticated = authenticated;
@@ -62,6 +69,8 @@ public class Controller implements Initializable {
         msgPanel.setManaged(authenticated);
         clientList.setVisible(authenticated);
         clientList.setManaged(authenticated);
+        topPanel.setVisible(authenticated);
+        topPanel.setManaged(authenticated);
         authPanel.setVisible(!authenticated);
         authPanel.setManaged(!authenticated);
         if (!authenticated) {
@@ -105,6 +114,8 @@ public class Controller implements Initializable {
                         if (str.startsWith("/")) {
                             if (str.startsWith(Command.AUTH_OK)) {
                                 nickname = str.split("\\s")[1];
+                                login = str.split("\\s")[2];
+                                System.out.println(login);
                                 setAuthenticated(true);
                                 break;
                             }
@@ -129,7 +140,6 @@ public class Controller implements Initializable {
                     //цикл работы
                     while (true) {
                         String str = in.readUTF();
-
                         if (str.startsWith("/")) {
                             if (str.equals(Command.END)) {
                                 System.out.println("client disconnected");
@@ -144,13 +154,12 @@ public class Controller implements Initializable {
                                     }
                                 });
                             }
-
                         } else {
                             textArea.appendText(str + "\n");
                         }
                     }
                 } catch (RuntimeException e) {
-                    System.out.println(e.getMessage());
+                    e.printStackTrace();
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
@@ -183,9 +192,8 @@ public class Controller implements Initializable {
         if (socket == null || socket.isClosed()) {
             connect();
         }
-
-        String msg = String.format("%s %s %s", Command.AUTH, loginField.getText().trim(), passwordField.getText().trim());
-
+        String msg = String.format("%s %s %s", Command.AUTH, loginField.getText().trim(),
+                passwordField.getText().trim());
         try {
             out.writeUTF(msg);
             passwordField.clear();
@@ -230,7 +238,22 @@ public class Controller implements Initializable {
             regController.setController(this);
             regStage.initModality(Modality.APPLICATION_MODAL);
             regStage.initStyle(StageStyle.UTILITY);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
+    private void createSettingsWindow() {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/settings.fxml"));
+            Parent root = fxmlLoader.load();
+            settingsStage = new Stage();
+            settingsStage.setTitle("GeekChat settings");
+            settingsStage.setScene(new Scene(root, 400, 350));
+            settingsController = fxmlLoader.getController();
+            settingsController.setController(this);
+            settingsStage.initModality(Modality.APPLICATION_MODAL);
+            settingsStage.initStyle(StageStyle.UTILITY);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -240,12 +263,37 @@ public class Controller implements Initializable {
         if (socket == null || socket.isClosed()) {
             connect();
         }
-
         String msg = String.format("%s %s %s %s", Command.REG, login, password, nickname);
         try {
             out.writeUTF(msg);
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void saveSettings(String login, String nickname){
+        String msg = String.format("%s %s %s", Command.CH_SET, login, nickname);
+        System.out.println(msg);
+        try {
+            out.writeUTF(msg);
+            setTitle(nickname);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    public void settings(ActionEvent actionEvent) {
+        System.out.println("Settings");
+        createSettingsWindow();
+        settingsStage.show();
+    }
+
+    public String getLogin() {
+        return login;
+    }
+
+    public String getNickname() {
+        return nickname;
     }
 }

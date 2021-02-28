@@ -1,12 +1,16 @@
 package server;
 
 import commands.Command;
+import db.DB;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.sql.SQLException;
+
+import static java.lang.Thread.sleep;
 
 public class ClientHandler {
     private Server server;
@@ -25,11 +29,10 @@ public class ClientHandler {
 
             new Thread(() -> {
                 try {
-                    socket.setSoTimeout(5000);
+                    socket.setSoTimeout(120000);
                     //цикл аутентификации
                     while (true) {
                         String str = in.readUTF();
-
                         if (str.startsWith(Command.AUTH)) {
                             String[] token = str.split("\\s");
                             String newNick = server.getAuthService()
@@ -38,9 +41,9 @@ public class ClientHandler {
                             if (newNick != null) {
                                 if (!server.isLoginAuthenticated(login)) {
                                     nickname = newNick;
-                                    sendMsg(Command.AUTH_OK + " " + nickname);
+                                    sendMsg(Command.AUTH_OK + " " + nickname + " " + login);
                                     server.subscribe(this);
-                                    System.out.println("client " + nickname + " connected " + socket.getRemoteSocketAddress());
+                                    System.out.println("client1 " + nickname + " connected " + socket.getRemoteSocketAddress());
                                     socket.setSoTimeout(0);
                                     break;
                                 } else {
@@ -69,10 +72,12 @@ public class ClientHandler {
                             }
                         }
                     }
+                    System.out.println("after cycle");
 
                     //цикл работы
                     while (true) {
                         String str = in.readUTF();
+                        System.out.println("In thread " + str);
 
                         if (str.startsWith("/")) {
                             if (str.equals(Command.END)) {
@@ -86,7 +91,12 @@ public class ClientHandler {
                                 }
                                 server.privateMsg(this, token[1], token[2]);
                             }
-
+                            if (str.startsWith(Command.CH_SET)) {
+                                String[] token = str.split("\\s");
+                                System.out.println("CH SET");
+                                //sendMsg(Command.CH_SET);
+                                DB.updSettings(token[1], token[2]);
+                            }
                         } else {
                             server.broadcastMsg(this, str);
                         }
@@ -97,6 +107,8 @@ public class ClientHandler {
                 } catch (RuntimeException e) {
                     System.out.println(e.getMessage());
                 } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (SQLException e) {
                     e.printStackTrace();
                 } finally {
                     server.unsubscribe(this);
