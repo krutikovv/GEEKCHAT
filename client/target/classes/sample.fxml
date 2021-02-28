@@ -6,29 +6,45 @@
 <?import java.net.URL?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Label?>
+<?import javafx.geometry.Insets?>
 <VBox fx:controller="client.Controller"
-      xmlns:fx="http://javafx.com/fxml" alignment="center">
+      xmlns:fx="http://javafx.com/fxml" alignment="TOP_CENTER">
 
     <stylesheets>
         <URL value="@/css/style.css"/>
     </stylesheets>
 
-    <HBox fx:id="authPanel">
-        <TextField fx:id="loginField" HBox.hgrow="ALWAYS" promptText="login"/>
-        <PasswordField fx:id="passwordField" HBox.hgrow="ALWAYS" promptText="password" onAction="#tryToAuth"/>
+    <HBox fx:id="authPanel" spacing="10">
+        <padding>
+            <Insets top="10" bottom="10" right="10" left="10" />
+        </padding>
+        <TextField fx:id="loginField" promptText="login"/>
+        <PasswordField fx:id="passwordField" promptText="password" onAction="#tryToAuth"/>
         <Button text="login" onAction="#tryToAuth" minWidth="100"/>
         <Button text="reg" onAction="#registration" minWidth="80"/>
     </HBox>
 
-    <HBox VBox.vgrow="ALWAYS">
-        <ListView fx:id="clientList" visible="false" managed="false" minWidth="100"
-        onMouseReleased="#clientListClicked"/>
-        <TextArea fx:id="textArea" HBox.hgrow="ALWAYS" editable="false"/>
+    <HBox fx:id="topPanel" spacing="10">
+        <padding>
+            <Insets top="10" bottom="10" right="10" left="10"/>
+        </padding>
+        <Button fx:id="btnSettings" text = "≡" onAction="#settings"/>
+        <TextField fx:id="textFind" promptText="Find" maxWidth="140"/>
+        <Label fx:id="lblHat" text="Test title" alignment="CENTER_LEFT" minHeight="35"/>
     </HBox>
 
-    <HBox fx:id="msgPanel" visible="false" managed="false">
-        <TextField fx:id="textField" HBox.hgrow="ALWAYS" promptText="input message" onAction="#sendMsg"/>
-        <Button text="send" onAction="#sendMsg"/>
+    <HBox fx:id="middlePanel" VBox.vgrow="ALWAYS">
+        <ListView fx:id="clientList" visible="false" managed="false" minWidth="200"
+                  onMouseReleased="#clientListClicked"/>
+        <TextArea fx:id="textArea" VBox.vgrow="ALWAYS" editable="false"/>
     </HBox>
+
+    <HBox fx:id="msgPanel">
+        <TextField fx:id="textField" HBox.hgrow="ALWAYS" promptText="input message" onAction="#sendMsg"/>
+        <Button text=">" onAction="#sendMsg"/>
+    </HBox>
+
+
 
 </VBox>

@@ -1,10 +1,12 @@
 package server;
 
 import commands.Command;
+import db.DB;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -23,6 +25,9 @@ public class Server {
             server = new ServerSocket(PORT);
             System.out.println("Server started");
 
+            DB.connect();
+            System.out.println("DB is connected");
+
             while (true) {
                 socket = server.accept();
                 System.out.println("Client connected");
@@ -30,6 +35,10 @@ public class Server {
             }
 
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } finally {
             try {
@@ -76,23 +85,27 @@ public class Server {
     }
 
     public boolean isLoginAuthenticated(String login) {
-        for (ClientHandler c : clients) {
-            if (c.getLogin().equals(login)) {
+        int status;
+        try {
+            status = DB.status(login);
+            System.out.println(status);
+            if (status == 1) {
                 return true;
+            } else {
+                return false;
             }
+        } catch (SQLException e) {
+            e.getErrorCode();
+            return true;
         }
-        return false;
     }
 
     public void broadcastClientList() {
         StringBuilder sb = new StringBuilder(Command.CLIENT_LIST);
-
         for (ClientHandler c : clients) {
             sb.append(" ").append(c.getNickname());
         }
-
         String msg = sb.toString();
-
         for (ClientHandler c : clients) {
             c.sendMsg(msg);
         }

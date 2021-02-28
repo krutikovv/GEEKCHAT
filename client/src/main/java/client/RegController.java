@@ -1,15 +1,21 @@
 package client;
 
 import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 
 public class RegController {
-    public TextField loginField;
-    public PasswordField passwordField;
-    public TextField nicknameField;
-    public TextArea textArea;
+    @FXML
+    private TextField loginField;
+    @FXML
+    private PasswordField passwordField;
+    @FXML
+    private TextField nicknameField;
+    @FXML
+    private TextArea textArea;
+
     private Controller controller;
 
     public void setController(Controller controller) {
@@ -20,7 +26,6 @@ public class RegController {
         String login = loginField.getText().trim();
         String password = passwordField.getText().trim();
         String nickname = nicknameField.getText().trim();
-
         controller.tryToReg(login, password, nickname);
     }
 
